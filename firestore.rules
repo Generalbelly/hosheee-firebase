@@ -1,0 +1,33 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function authData() {
+      return request.auth;
+    }
+    function incomingData() {
+      return request.resource.data;
+    }
+    function signedIn() {
+    	return authData().uid != null;
+    }
+    function isOwner(userId) {
+      return authData().uid == userId;
+    }
+    match /users/{userId} {
+      allow get, delete: if signedIn() && isOwner(userId);
+      allow create: if signedIn() && isOwner(userId) &&
+        incomingData().createdAt is timestamp &&
+        incomingData().updatedAt is timestamp;
+      allow update: if signedIn() && isOwner(userId) &&
+        incomingData().updatedAt is timestamp;
+    }
+    match /users/{userId}/collections/{collectionId}/{document=**} {
+      allow list, get, delete: if signedIn() && isOwner(userId);
+      allow create: if signedIn() && isOwner(userId) &&
+        incomingData().createdAt is timestamp &&
+        incomingData().updatedAt is timestamp;
+      allow update: if signedIn() && isOwner(userId) &&
+        incomingData().updatedAt is timestamp;
+    }
+  }
+}

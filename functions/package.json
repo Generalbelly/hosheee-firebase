@@ -1,0 +1,56 @@
+{
+  "name": "functions",
+  "scripts": {
+    "lint": "tslint --project tsconfig.json",
+    "build": "tsc",
+    "serve": "npm run build && firebase serve --only functions",
+    "shell": "npm run build && firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase use wish-dev-16a7d && firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "10"
+  },
+  "main": "lib/index.js",
+  "dependencies": {
+    "@google-cloud/logging": "^8.0.5",
+    "@types/metascraper": "^5.14.0",
+    "@types/metascraper-amazon": "^5.14.0",
+    "@types/metascraper-author": "^5.14.0",
+    "@types/metascraper-clearbit": "^5.14.0",
+    "@types/metascraper-date": "^5.14.0",
+    "@types/metascraper-description": "^5.14.0",
+    "@types/metascraper-image": "^5.14.0",
+    "@types/metascraper-lang": "^5.14.0",
+    "@types/metascraper-logo": "^5.14.0",
+    "@types/metascraper-publisher": "^5.14.0",
+    "@types/metascraper-title": "^5.14.0",
+    "@types/metascraper-url": "^5.14.0",
+    "@types/metascraper-video": "^5.14.0",
+    "@types/metascraper-youtube": "^5.14.0",
+    "firebase-admin": "^8.6.0",
+    "firebase-functions": "^3.3.0",
+    "got": "^11.5.2",
+    "metascraper": "^5.14.5",
+    "metascraper-amazon": "^5.14.5",
+    "metascraper-author": "^5.14.5",
+    "metascraper-clearbit": "^5.14.5",
+    "metascraper-date": "^5.14.5",
+    "metascraper-description": "^5.14.5",
+    "metascraper-image": "^5.14.5",
+    "metascraper-lang": "^5.14.5",
+    "metascraper-logo": "^5.14.5",
+    "metascraper-publisher": "^5.14.5",
+    "metascraper-title": "^5.14.5",
+    "metascraper-url": "^5.14.5",
+    "metascraper-video": "^5.14.5",
+    "metascraper-youtube": "^5.14.5"
+  },
+  "devDependencies": {
+    "tslint": "^5.12.0",
+    "typescript": "^3.2.2",
+    "firebase-functions-test": "^0.1.6"
+  },
+  "private": true
+}

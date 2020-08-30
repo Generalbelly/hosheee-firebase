@@ -1,0 +1,77 @@
+version: 2
+jobs:
+  deploy_job:
+    docker:
+      - image: circleci/node:10.15.3
+    steps:
+      - checkout
+      # - run:
+      #     name: install gettext
+      #     command: sudo apt-get update && sudo apt-get install gettext-base
+
+      - restore_cache:
+          name: Restore cache
+          keys:
+            - v1-dependencies-{{ checksum "yarn.lock" }}-{{ checksum "functions/package-lock.json" }}
+
+      - run:
+          name: install dependency for the project
+          command: yarn upgrade && yarn install && cd functions && npm install && cd ../
+
+      - save_cache:
+          name: Save cache
+          key: v1-dependencies-{{ checksum "yarn.lock" }}-{{ checksum "functions/package-lock.json" }}
+          paths:
+            - node_modules
+            - functions/node_modules
+
+      # - run:
+      #     name: get firebase.json ready
+      #     command: cp firebase.production.json firebase.json
+
+      - run:
+          name: set the project
+          command: ./node_modules/.bin/firebase use ${FIREBASE_PROJECT} --token ${FIREBASE_TOKEN}
+
+      # - run:
+      #     name: set env for clound functions
+      #     command: eval "./node_modules/.bin/firebase functions:config:set $(envsubst < config | tr "\n" " ")"
+
+      # - run:
+      #     name: build app
+      #     command: npm run build
+          
+      - run:
+          name: build functions
+          command: cd functions && npm run build && cd ../
+
+      - run:
+          name: deploy firebase hosting
+          command: ./node_modules/.bin/firebase deploy --only hosting --token ${FIREBASE_TOKEN}
+
+      - run:
+          name: deploy firestore:rules
+          command: ./node_modules/.bin/firebase deploy --only firestore:rules --token ${FIREBASE_TOKEN}
+
+      - run:
+          name: deploy firestore:indexes
+          command: ./node_modules/.bin/firebase deploy --only firestore:indexes --token ${FIREBASE_TOKEN}
+
+      - run:
+          name: deploy storage:rules
+          command: ./node_modules/.bin/firebase deploy --only storage --token ${FIREBASE_TOKEN}
+
+      - run:
+          name: deploy cloud functions
+          command: ./node_modules/.bin/firebase deploy --only functions --token ${FIREBASE_TOKEN}
+
+workflows:
+  version: 2
+  deploy:
+    jobs:
+      - deploy_job:
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              only: master
