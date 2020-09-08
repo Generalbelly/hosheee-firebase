@@ -1,6 +1,7 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import {CallableContext} from "firebase-functions/lib/providers/https";
+import {LogEntry} from "firebase-functions/lib/logger";
 
 const got = require('got');
 const metascraper = require('metascraper')([
@@ -22,7 +23,7 @@ const metascraper = require('metascraper')([
 
 admin.initializeApp();
 
-export const fetchMetadata = functions.region('asia-northeast1').https.onCall(async (data, context: CallableContext) => {
+export const fetchUrlMetadata = functions.region('asia-northeast1').https.onCall(async (data, context: CallableContext) => {
   if (!context.auth) {
     throw new functions.https.HttpsError('failed-precondition', 'The function must be called while authenticated.');
   }
@@ -47,4 +48,31 @@ export const fetchMetadata = functions.region('asia-northeast1').https.onCall(as
     });
   }
   return null;
+});
+
+export const writeLog = functions.region('asia-northeast1').https.onCall(async (data: LogEntry, context: CallableContext) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('failed-precondition', 'The function must be called while authenticated.');
+  }
+  try {
+    const { severity, message, payload } = data;
+    switch (severity) {
+      case 'ERROR':
+        functions.logger.error(message, payload);
+        break;
+      case 'WARNING':
+        functions.logger.warn(message, payload);
+        break;
+      case 'INFO':
+        functions.logger.info(message, payload)
+        break;
+      case 'DEBUG':
+        functions.logger.debug(message, payload);
+        break;
+      default:
+        functions.logger.log(message, payload);
+    }
+  } catch (e) {
+    functions.logger.error(e.message, data);
+  }
 });

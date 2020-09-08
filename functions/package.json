@@ -6,7 +6,8 @@
     "serve": "npm run build && firebase serve --only functions",
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
-    "deploy": "firebase use wish-dev-16a7d && firebase deploy --only functions",
+    "deploy:dev": "firebase use wish-list-dev && firebase deploy --only functions",
+    "deploy:prod": "firebase use wish-list-88f2e && firebase deploy --only functions",
     "logs": "firebase functions:log"
   },
   "engines": {
@@ -14,7 +15,6 @@
   },
   "main": "lib/index.js",
   "dependencies": {
-    "@google-cloud/logging": "^8.0.5",
     "@types/metascraper": "^5.14.0",
     "@types/metascraper-amazon": "^5.14.0",
     "@types/metascraper-author": "^5.14.0",
