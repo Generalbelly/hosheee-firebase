@@ -2,8 +2,8 @@ import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import {CallableContext} from "firebase-functions/lib/providers/https";
 import {LogEntry} from "firebase-functions/lib/logger";
+import axios from 'axios';
 
-const got = require('got');
 const metascraper = require('metascraper')([
   require('metascraper-amazon')(),
   require('metascraper-youtube')(),
@@ -31,11 +31,21 @@ export const fetchUrlMetadata = functions.region('asia-northeast1').https.onCall
   if (!(typeof url === 'string') || url.length === 0) {
 		throw new functions.https.HttpsError('invalid-argument', 'The function must be called with one arguments "url".');
 	}
+  let body = null;
   try {
-    const response = await got(url);
+    const response = await axios.get(url);
+    body = response.data;
+  } catch (e) {
+    functions.logger.error(e.message, {
+      url,
+    });
+    return null;
+  }
+
+  try {
     const metadata = await metascraper({
-      html: response.body,
-      url: response.url,
+      html: body,
+      url: url,
     });
     functions.logger.info('metadata', {
       url,
@@ -46,8 +56,8 @@ export const fetchUrlMetadata = functions.region('asia-northeast1').https.onCall
     functions.logger.error(e.message, {
       url,
     });
+    return null;
   }
-  return null;
 });
 
 export const writeLog = functions.region('asia-northeast1').https.onCall(async (data: LogEntry, context: CallableContext) => {
