@@ -1,8 +1,8 @@
 {
-  "name": "wish_list",
+  "name": "hosheee",
   "scripts": {
-    "deploy:dev": "firebase use wish-list-dev && firebase deploy --only firestore:rules,firestore:indexes,storage",
-    "deploy:prod": "firebase use wish-list-88f2e && firebase deploy --only firestore:rules,firestore:indexes,storage"
+    "deploy:dev": "firebase use hosheee-dev && firebase deploy --only firestore:rules,firestore:indexes,storage",
+    "deploy:prod": "firebase use hosheee && firebase deploy --only firestore:rules,firestore:indexes,storage"
   },
   "dependencies": {},
   "devDependencies": {},

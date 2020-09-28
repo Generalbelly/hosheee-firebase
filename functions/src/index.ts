@@ -86,3 +86,34 @@ export const writeLog = functions.region('asia-northeast1').https.onCall(async (
     functions.logger.error(e.message, data);
   }
 });
+
+
+// export const onProductWrite = functions.firestore
+//   .document('/users/{userId}/products/{productId}')
+//   .onWrite(async (snap, context) => {
+//     const userId = context.params['userId'];
+//     let product = snap.after.data();
+//     if (product) {
+//       if (!product['collectionId']) {
+//         return;
+//       }
+//       const doc = admin.firestore.Firestore.collection('users').doc(userId).collection('collections').doc(product['collectionId']);
+//       const snapshot = await doc.get();
+//       const collection = snapshot.data();
+//       if (!collection) {
+//         functions.logger.error('collection not found', {
+//           product,
+//         });
+//         return;
+//       }
+//       if (!collection['imageUrl'] && product['imageUrl']) {
+//         await doc.update({
+//           imageUrl: product['imageUrl'],
+//         });
+//       }
+//       return;
+//     } else {
+//       // 削除時
+//       product = snap.before.data();
+//     }
+//   });

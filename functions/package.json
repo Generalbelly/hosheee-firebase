@@ -6,8 +6,8 @@
     "serve": "npm run build && firebase serve --only functions",
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
-    "deploy:dev": "firebase use wish-list-dev && firebase deploy --only functions",
-    "deploy:prod": "firebase use wish-list-88f2e && firebase deploy --only functions",
+    "deploy:dev": "firebase use hosheee-dev && firebase deploy --only functions",
+    "deploy:prod": "firebase use hosheee && firebase deploy --only functions",
     "logs": "firebase functions:log"
   },
   "engines": {
