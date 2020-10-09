@@ -19,12 +19,12 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "productId",
+          "fieldPath": "collectionId",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
+          "fieldPath": "imageUrl",
+          "order": "ASCENDING"
         }
       ]
     },
@@ -33,12 +33,12 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "collectionId",
+          "fieldPath": "productId",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "imageUrl",
-          "order": "ASCENDING"
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
         }
       ]
     }
