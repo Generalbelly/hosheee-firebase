@@ -88,32 +88,79 @@ export const writeLog = functions.region('asia-northeast1').https.onCall(async (
 });
 
 
-// export const onProductWrite = functions.firestore
-//   .document('/users/{userId}/products/{productId}')
-//   .onWrite(async (snap, context) => {
-//     const userId = context.params['userId'];
-//     let product = snap.after.data();
-//     if (product) {
-//       if (!product['collectionId']) {
-//         return;
-//       }
-//       const doc = admin.firestore.Firestore.collection('users').doc(userId).collection('collections').doc(product['collectionId']);
-//       const snapshot = await doc.get();
-//       const collection = snapshot.data();
-//       if (!collection) {
-//         functions.logger.error('collection not found', {
-//           product,
-//         });
-//         return;
-//       }
-//       if (!collection['imageUrl'] && product['imageUrl']) {
-//         await doc.update({
-//           imageUrl: product['imageUrl'],
-//         });
-//       }
-//       return;
-//     } else {
-//       // 削除時
-//       product = snap.before.data();
-//     }
-//   });
+export const onCollectionProductWrite = functions.region('asia-northeast1').firestore
+  .document('/users/{userId}/collection_products/{collectionProductId}')
+  .onWrite(async (snap, context) => {
+    const userId = context.params['userId'];
+    let collectionProduct = snap.after.data();
+    let isDeleted = false;
+    if (!collectionProduct) {
+      collectionProduct = snap.before.data();
+      isDeleted = true;
+    }
+    if (!collectionProduct) {
+      // 多分ないと思うけど
+      functions.logger.info('collectionProduct not found', {
+        collectionProduct,
+        context,
+      });
+      return;
+    }
+    if (!collectionProduct['imageUrl']) {
+      // imageUrlがないと意味ないので処理を終える
+      functions.logger.info('collectionProduct doesn\'t have imageUrl', {
+        collectionProduct,
+        context,
+      });
+      return;
+    }
+    const collectionId = collectionProduct['collectionId'];
+    const collectionDoc = admin.firestore()
+      .collection('users')
+      .doc(userId)
+      .collection('collections')
+      .doc(collectionId);
+    const collectionQuerySnapshot = await collectionDoc.get();
+    const collection = collectionQuerySnapshot.data();
+    if (!collection) {
+      functions.logger.info('collection not found', {
+        collectionProduct,
+        context,
+      });
+      return;
+    }
+    const collectionImageUrl = collection['imageUrl'];
+    let collectionProductImageUrl = collectionProduct['imageUrl'];
+    if (isDeleted) {
+      // すでにcollectionに画像が設定されてるし、設定されてる画像はこの削除されるプロダクトのものではない
+      if (collectionImageUrl && collectionImageUrl !== collectionProductImageUrl) return;
+    } else {
+      // すでにcollectionに画像が設定されてる
+      if (collectionImageUrl) return;
+    }
+
+    if (isDeleted) {
+      const productQuerySnapshot = await admin.firestore()
+        .collection('users')
+        .doc(userId)
+        .collection('collection_products')
+        .where('collectionId', '==', collectionId)
+        .where('imageUrl', '!=', null)
+        .limit(1)
+        .get();
+      if (productQuerySnapshot.empty) {
+        functions.logger.info('product belonging to the collection not found', {
+          collection,
+          context,
+        });
+        await collectionDoc.update({
+          imageUrl: null,
+        });
+        return;
+      }
+      collectionProductImageUrl = productQuerySnapshot.docs[0].data()['imageUrl'];
+    }
+    await collectionDoc.update({
+      imageUrl: collectionProductImageUrl,
+    });
+  });
