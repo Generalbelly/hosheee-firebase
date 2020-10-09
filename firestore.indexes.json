@@ -19,6 +19,20 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
+          "fieldPath": "productId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "collection_products",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
           "fieldPath": "collectionId",
           "order": "ASCENDING"
         },
