@@ -106,9 +106,10 @@ export const onCollectionProductWrite = functions.region('asia-northeast1').fire
       });
       return;
     }
-    if (!collectionProduct['imageUrl']) {
+    let collectionProductImageUrl = collectionProduct['productImageUrl'];
+    if (!collectionProductImageUrl) {
       // imageUrlがないと意味ないので処理を終える
-      functions.logger.info('collectionProduct doesn\'t have imageUrl', {
+      functions.logger.info('collectionProduct doesn\'t have productImageUrl', {
         collectionProduct,
         context,
       });
@@ -124,19 +125,36 @@ export const onCollectionProductWrite = functions.region('asia-northeast1').fire
     const collection = collectionQuerySnapshot.data();
     if (!collection) {
       functions.logger.info('collection not found', {
+        collection,
         collectionProduct,
+        collectionProductImageUrl,
         context,
       });
       return;
     }
     const collectionImageUrl = collection['imageUrl'];
-    let collectionProductImageUrl = collectionProduct['imageUrl'];
     if (isDeleted) {
       // すでにcollectionに画像が設定されてるし、設定されてる画像はこの削除されるプロダクトのものではない
-      if (collectionImageUrl && collectionImageUrl !== collectionProductImageUrl) return;
+      if (collectionImageUrl && collectionImageUrl !== collectionProductImageUrl) {
+        functions.logger.info('collection already has imageUrl and the imageUrl is different from the product\'s one', {
+          collection,
+          collectionProduct,
+          collectionProductImageUrl,
+          context,
+        });
+        return;
+      }
     } else {
       // すでにcollectionに画像が設定されてる
-      if (collectionImageUrl) return;
+      if (collectionImageUrl) {
+        functions.logger.info('collection already has imageUrl', {
+          collection,
+          collectionProduct,
+          collectionProductImageUrl,
+          context,
+        });
+        return;
+      }
     }
 
     if (isDeleted) {
@@ -151,6 +169,8 @@ export const onCollectionProductWrite = functions.region('asia-northeast1').fire
       if (productQuerySnapshot.empty) {
         functions.logger.info('product belonging to the collection not found', {
           collection,
+          collectionProduct,
+          collectionProductImageUrl,
           context,
         });
         await collectionDoc.update({
@@ -160,6 +180,13 @@ export const onCollectionProductWrite = functions.region('asia-northeast1').fire
       }
       collectionProductImageUrl = productQuerySnapshot.docs[0].data()['imageUrl'];
     }
+
+    functions.logger.info(`updating collection's imageUrl`, {
+      collection,
+      collectionProduct,
+      collectionProductImageUrl,
+      context,
+    });
     await collectionDoc.update({
       imageUrl: collectionProductImageUrl,
     });
