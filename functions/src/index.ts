@@ -176,7 +176,7 @@ export const onCollectionProductDelete = functions.region('asia-northeast1').fir
       .doc(userId)
       .collection('collection_products')
       .where('collectionId', '==', collectionId)
-      .where('imageUrl', '!=', null)
+      .where('productImageUrl', '!=', null)
       .limit(1)
       .get();
     if (productQuerySnapshot.empty) {
@@ -196,6 +196,6 @@ export const onCollectionProductDelete = functions.region('asia-northeast1').fir
       context,
     });
     await collectionDoc.update({
-      imageUrl: productQuerySnapshot.docs[0].data()['imageUrl'],
+      imageUrl: productQuerySnapshot.docs[0].data()['productImageUrl'],
     });
   });
