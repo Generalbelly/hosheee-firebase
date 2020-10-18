@@ -88,25 +88,12 @@ export const writeLog = functions.region('asia-northeast1').https.onCall(async (
 });
 
 
-export const onCollectionProductWrite = functions.region('asia-northeast1').firestore
+export const onCollectionProductCreate = functions.region('asia-northeast1').firestore
   .document('/users/{userId}/collection_products/{collectionProductId}')
-  .onWrite(async (snap, context) => {
-    const userId = context.params['userId'];
-    let collectionProduct = snap.after.data();
-    let isDeleted = false;
-    if (!collectionProduct) {
-      collectionProduct = snap.before.data();
-      isDeleted = true;
-    }
-    if (!collectionProduct) {
-      // 多分ないと思うけど
-      functions.logger.info('collectionProduct not found', {
-        collectionProduct,
-        context,
-      });
-      return;
-    }
-    let collectionProductImageUrl = collectionProduct['productImageUrl'];
+  .onCreate(async (snap, context) => {
+    const { userId } = context.params;
+    const collectionProduct = snap.data();
+    const collectionProductImageUrl = collectionProduct['productImageUrl'];
     if (!collectionProductImageUrl) {
       // imageUrlがないと意味ないので処理を終える
       functions.logger.info('collectionProduct doesn\'t have productImageUrl', {
@@ -127,60 +114,10 @@ export const onCollectionProductWrite = functions.region('asia-northeast1').fire
       functions.logger.info('collection not found', {
         collection,
         collectionProduct,
-        collectionProductImageUrl,
         context,
       });
       return;
     }
-    const collectionImageUrl = collection['imageUrl'];
-    if (isDeleted) {
-      // すでにcollectionに画像が設定されてるし、設定されてる画像はこの削除されるプロダクトのものではない
-      if (collectionImageUrl && collectionImageUrl !== collectionProductImageUrl) {
-        functions.logger.info('collection already has imageUrl and the imageUrl is different from the product\'s one', {
-          collection,
-          collectionProduct,
-          collectionProductImageUrl,
-          context,
-        });
-        return;
-      }
-    } else {
-      // すでにcollectionに画像が設定されてる
-      if (collectionImageUrl) {
-        functions.logger.info('collection already has imageUrl', {
-          collection,
-          collectionProduct,
-          collectionProductImageUrl,
-          context,
-        });
-        return;
-      }
-    }
-
-    if (isDeleted) {
-      const productQuerySnapshot = await admin.firestore()
-        .collection('users')
-        .doc(userId)
-        .collection('collection_products')
-        .where('collectionId', '==', collectionId)
-        .where('imageUrl', '!=', null)
-        .limit(1)
-        .get();
-      if (productQuerySnapshot.empty) {
-        functions.logger.info('product belonging to the collection not found', {
-          collection,
-          collectionProduct,
-          collectionProductImageUrl,
-          context,
-        });
-        await collectionDoc.update({
-          imageUrl: null,
-        });
-        return;
-      }
-      collectionProductImageUrl = productQuerySnapshot.docs[0].data()['imageUrl'];
-    }
-
     functions.logger.info(`updating collection's imageUrl`, {
       collection,
       collectionProduct,
@@ -189,5 +126,76 @@ export const onCollectionProductWrite = functions.region('asia-northeast1').fire
     });
     await collectionDoc.update({
       imageUrl: collectionProductImageUrl,
+    });
+  });
+
+
+export const onCollectionProductDelete = functions.region('asia-northeast1').firestore
+  .document('/users/{userId}/collection_products/{collectionProductId}')
+  .onDelete(async (snap, context) => {
+    const { userId } = context.params;
+    const collectionProduct = snap.data();
+    const collectionProductImageUrl = collectionProduct['productImageUrl'];
+    if (!collectionProductImageUrl) {
+      // imageUrlがないと意味ないので処理を終える
+      functions.logger.info('collectionProduct doesn\'t have productImageUrl', {
+        collectionProduct,
+        context,
+      });
+      return;
+    }
+    const collectionId = collectionProduct['collectionId'];
+    const collectionDoc = admin.firestore()
+      .collection('users')
+      .doc(userId)
+      .collection('collections')
+      .doc(collectionId);
+    const collectionQuerySnapshot = await collectionDoc.get();
+    const collection = collectionQuerySnapshot.data();
+    if (!collection) {
+      functions.logger.info('collection not found', {
+        collection,
+        collectionProduct,
+        context,
+      });
+      return;
+    }
+    const collectionImageUrl = collection['imageUrl'];
+    // すでにcollectionに画像が設定されてるし、設定されてる画像はこの削除されるプロダクトのものではない
+    if (collectionImageUrl && collectionImageUrl !== collectionProductImageUrl) {
+      functions.logger.info('collection already has imageUrl, which is different from the product\'s one', {
+        collection,
+        collectionProduct,
+        context,
+      });
+      return;
+    }
+
+    const productQuerySnapshot = await admin.firestore()
+      .collection('users')
+      .doc(userId)
+      .collection('collection_products')
+      .where('collectionId', '==', collectionId)
+      .where('imageUrl', '!=', null)
+      .limit(1)
+      .get();
+    if (productQuerySnapshot.empty) {
+      functions.logger.info('product belonging to the collection not found', {
+        collection,
+        collectionProduct,
+        context,
+      });
+      await collectionDoc.update({
+        imageUrl: null,
+      });
+      return;
+    }
+    functions.logger.info(`updating collection's imageUrl`, {
+      collection,
+      collectionProduct,
+      context,
+    });
+    await collectionDoc.update({
+      imageUrl: productQuerySnapshot.docs[0].data()['imageUrl'],
     });
   });
