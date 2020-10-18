@@ -87,6 +87,73 @@ export const writeLog = functions.region('asia-northeast1').https.onCall(async (
   }
 });
 
+export const onProductUpdate = functions.region('asia-northeast1').firestore
+  .document('/users/{userId}/products/{productId}')
+  .onUpdate(async (snap, context) => {
+    const oldProduct = snap.after.data();
+    const product = snap.after.data();
+    if (oldProduct['imageUrl'] !== product['imageUrl'] || oldProduct['name'] !== product['name']) {
+      const querySnapshot = await admin.firestore()
+        .collection('users')
+        .doc(context.params['userId'])
+        .collection('collection_products')
+        .where('productId', '==', product['id']).get();
+      for (const snapshot of querySnapshot.docs) {
+        await snapshot.ref.update({
+          name: product['name'],
+          imageUrl: product['imageUrl'],
+        });
+      }
+    }
+  });
+
+export const onProductDelete = functions.region('asia-northeast1').firestore
+  .document('/users/{userId}/products/{productId}')
+  .onDelete(async (snap, context) => {
+    const product = snap.data();
+    const querySnapshot = await admin.firestore()
+      .collection('users')
+      .doc(context.params['userId'])
+      .collection('collection_products')
+      .where('productId', '==', product['id']).get();
+    for (const snapshot of querySnapshot.docs) {
+      await snapshot.ref.delete();
+    }
+  });
+
+export const onCollectionUpdate = functions.region('asia-northeast1').firestore
+  .document('/users/{userId}/collections/{collectionId}')
+  .onUpdate(async (snap, context) => {
+    const oldCollection = snap.after.data();
+    const collection = snap.after.data();
+    if (oldCollection['imageUrl'] !== collection['imageUrl'] || oldCollection['name'] !== collection['name']) {
+      const querySnapshot = await admin.firestore()
+        .collection('users')
+        .doc(context.params['userId'])
+        .collection('collection_products')
+        .where('collectionId', '==', collection['id']).get();
+      for (const snapshot of querySnapshot.docs) {
+        await snapshot.ref.update({
+          name: collection['name'],
+          imageUrl: collection['imageUrl'],
+        });
+      }
+    }
+  });
+
+export const onCollectionDelete = functions.region('asia-northeast1').firestore
+  .document('/users/{userId}/collections/{collectionId}')
+  .onDelete(async (snap, context) => {
+    const collection = snap.data();
+    const querySnapshot = await admin.firestore()
+      .collection('users')
+      .doc(context.params['userId'])
+      .collection('collection_products')
+      .where('collectionId', '==', collection['id']).get();
+    for (const snapshot of querySnapshot.docs) {
+      await snapshot.ref.delete();
+    }
+  });
 
 export const onCollectionProductCreate = functions.region('asia-northeast1').firestore
   .document('/users/{userId}/collection_products/{collectionProductId}')
@@ -128,7 +195,6 @@ export const onCollectionProductCreate = functions.region('asia-northeast1').fir
       imageUrl: collectionProductImageUrl,
     });
   });
-
 
 export const onCollectionProductDelete = functions.region('asia-northeast1').firestore
   .document('/users/{userId}/collection_products/{collectionProductId}')
