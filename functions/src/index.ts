@@ -90,7 +90,7 @@ export const writeLog = functions.region('asia-northeast1').https.onCall(async (
 export const onProductUpdate = functions.region('asia-northeast1').firestore
   .document('/users/{userId}/products/{productId}')
   .onUpdate(async (snap, context) => {
-    const oldProduct = snap.after.data();
+    const oldProduct = snap.before.data();
     const product = snap.after.data();
     if (oldProduct['imageUrl'] !== product['imageUrl'] || oldProduct['name'] !== product['name']) {
       const querySnapshot = await admin.firestore()
@@ -124,7 +124,7 @@ export const onProductDelete = functions.region('asia-northeast1').firestore
 export const onCollectionUpdate = functions.region('asia-northeast1').firestore
   .document('/users/{userId}/collections/{collectionId}')
   .onUpdate(async (snap, context) => {
-    const oldCollection = snap.after.data();
+    const oldCollection = snap.before.data();
     const collection = snap.after.data();
     if (oldCollection['imageUrl'] !== collection['imageUrl'] || oldCollection['name'] !== collection['name']) {
       const querySnapshot = await admin.firestore()
