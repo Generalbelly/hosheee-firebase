@@ -100,8 +100,8 @@ export const onProductUpdate = functions.region('asia-northeast1').firestore
         .where('productId', '==', product['id']).get();
       for (const snapshot of querySnapshot.docs) {
         await snapshot.ref.update({
-          name: product['name'],
-          imageUrl: product['imageUrl'],
+          productName: product['name'],
+          productImageUrl: product['imageUrl'],
         });
       }
     }
@@ -134,8 +134,8 @@ export const onCollectionUpdate = functions.region('asia-northeast1').firestore
         .where('collectionId', '==', collection['id']).get();
       for (const snapshot of querySnapshot.docs) {
         await snapshot.ref.update({
-          name: collection['name'],
-          imageUrl: collection['imageUrl'],
+          collectionName: collection['name'],
+          collectionImageUrl: collection['imageUrl'],
         });
       }
     }
