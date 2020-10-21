@@ -1,8 +1,10 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
+import * as chardet from 'chardet';
+import * as iconv from 'iconv-lite';
+import axios from 'axios';
 import {CallableContext} from "firebase-functions/lib/providers/https";
 import {LogEntry} from "firebase-functions/lib/logger";
-import axios from 'axios';
 
 const metascraper = require('metascraper')([
   require('metascraper-amazon')(),
@@ -24,16 +26,26 @@ const metascraper = require('metascraper')([
 admin.initializeApp();
 
 export const fetchUrlMetadata = functions.region('asia-northeast1').https.onCall(async (data, context: CallableContext) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError('failed-precondition', 'The function must be called while authenticated.');
-  }
+  // if (!context.auth) {
+  //   throw new functions.https.HttpsError('failed-precondition', 'The function must be called while authenticated.');
+  // }
 	const { url } = data;
   if (!(typeof url === 'string') || url.length === 0) {
 		throw new functions.https.HttpsError('invalid-argument', 'The function must be called with one arguments "url".');
 	}
   let body = null;
   try {
-    const response = await axios.get(url);
+    const client = axios.create({
+      responseType: 'arraybuffer',
+      transformResponse: (responseData) => {
+        const encoding = chardet.detect(responseData);
+        if (!encoding) {
+          throw new Error('chardet failed to detect encoding');
+        }
+        return iconv.decode(responseData, encoding);
+      }
+    });
+    const response = await client.get(url);
     body = response.data;
   } catch (e) {
     functions.logger.error(e.message, {
