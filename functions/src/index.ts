@@ -1,8 +1,6 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import * as chardet from 'chardet';
-import * as iconv from 'iconv-lite';
-import axios from 'axios';
+const puppeteer = require('puppeteer');
 import {CallableContext} from "firebase-functions/lib/providers/https";
 import {LogEntry} from "firebase-functions/lib/logger";
 
@@ -14,7 +12,7 @@ const metascraper = require('metascraper')([
   require('metascraper-description')(),
   require('metascraper-image')(),
   require('metascraper-logo')(),
-  require('metascraper-clearbit')(),
+  // require('metascraper-clearbit')(),
   require('metascraper-publisher')(),
   require('metascraper-title')(),
   require('metascraper-url')(),
@@ -33,20 +31,17 @@ export const fetchUrlMetadata = functions.region('asia-northeast1').https.onCall
   if (!(typeof url === 'string') || url.length === 0) {
 		throw new functions.https.HttpsError('invalid-argument', 'The function must be called with one arguments "url".');
 	}
+  let browser;
   let body = null;
   try {
-    const client = axios.create({
-      responseType: 'arraybuffer',
-      transformResponse: (responseData) => {
-        const encoding = chardet.detect(responseData);
-        if (!encoding) {
-          throw new Error('chardet failed to detect encoding');
-        }
-        return iconv.decode(responseData, encoding);
-      }
+    browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox']
     });
-    const response = await client.get(url);
-    body = response.data;
+    const page = await browser.newPage();
+    await page.goto(url, {waitUntil: 'networkidle0'});
+    body = await page.evaluate(() => document.documentElement.outerHTML);
+    browser.close();
   } catch (e) {
     functions.logger.error(e.message, {
       url,
