@@ -2,7 +2,7 @@ version: '3'
 services:
   app:
     build: .
-    container_name: hosheee_firebase
+    container_name: hosheee-firebase
     tty: true
     volumes:
       - ./:/app
