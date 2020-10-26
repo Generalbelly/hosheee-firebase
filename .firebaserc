@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "wish-dev-16a7d"
+    "default": "hosheee-dev",
+    "prod": "hosheee",
+    "dev": "hosheee-dev"
   }
 }

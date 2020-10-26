@@ -2,7 +2,9 @@
   "name": "hosheee",
   "scripts": {
     "deploy:dev": "firebase use hosheee-dev && firebase deploy --only firestore:rules,firestore:indexes,storage",
-    "deploy:prod": "firebase use hosheee && firebase deploy --only firestore:rules,firestore:indexes,storage"
+    "deploy:prod": "firebase use hosheee && firebase deploy --only firestore:rules,firestore:indexes,storage",
+    "deploy-site:dev": "firebase use hosheee-dev && firebase deploy --only hosting",
+    "deploy-site:prod": "firebase use hosheee && firebase deploy --only hosting"
   },
   "dependencies": {},
   "devDependencies": {},
