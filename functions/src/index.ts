@@ -52,7 +52,7 @@ export const fetchUrlMetadata = functions.region('asia-northeast1').https.onCall
     const err = e as AxiosError;
     functions.logger.error(`fetch url data failed: ${e.message}`, {
       url,
-      response: err.response,
+      response: JSON.stringify(err.response),
     });
     return {
       url,
