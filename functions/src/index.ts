@@ -27,9 +27,9 @@ const metascraper = require('metascraper')([
 admin.initializeApp();
 
 export const fetchUrlMetadata = functions.region('asia-northeast1').https.onCall(async (data, context: CallableContext) => {
-  // if (!context.auth) {
-  //   throw new functions.https.HttpsError('failed-precondition', 'The function must be called while authenticated.');
-  // }
+  if (!context.auth) {
+    throw new functions.https.HttpsError('failed-precondition', 'The function must be called while authenticated.');
+  }
   const { url } = data;
   if (!(typeof url === 'string') || url.length === 0) {
     throw new functions.https.HttpsError('invalid-argument', 'The function must be called with one arguments "url".');
