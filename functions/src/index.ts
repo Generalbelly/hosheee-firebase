@@ -1,5 +1,8 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
+import * as chardet from 'chardet';
+import * as iconv from 'iconv-lite';
+import axios from 'axios';
 const puppeteer = require('puppeteer');
 import {CallableContext} from "firebase-functions/lib/providers/https";
 import {LogEntry} from "firebase-functions/lib/logger";
@@ -23,7 +26,72 @@ const metascraper = require('metascraper')([
 
 admin.initializeApp();
 
-export const fetchUrlMetadata = functions.region('asia-northeast1').runWith({
+export const fetchUrlMetadata = functions.region('asia-northeast1').https.onCall(async (data, context: CallableContext) => {
+  // if (!context.auth) {
+  //   throw new functions.https.HttpsError('failed-precondition', 'The function must be called while authenticated.');
+  // }
+  const { url } = data;
+  if (!(typeof url === 'string') || url.length === 0) {
+    throw new functions.https.HttpsError('invalid-argument', 'The function must be called with one arguments "url".');
+  }
+  let body = null;
+  try {
+    const client = axios.create({
+      responseType: 'arraybuffer',
+      transformResponse: (responseData) => {
+        const encoding = chardet.detect(responseData);
+        if (!encoding) {
+          throw new Error('chardet failed to detect encoding');
+        }
+        return iconv.decode(responseData, encoding);
+      }
+    });
+    const response = await client.get(url);
+    body = response.data;
+  } catch (e) {
+    functions.logger.error(`fetch url data failed: ${e.message}`, {
+      url,
+    });
+    return {
+      url,
+      date: null,
+      title: null,
+      description: null,
+      logo: null,
+      lang: null,
+      video: null,
+      author: null
+    };
+  }
+
+  try {
+    const metadata = await metascraper({
+      html: body,
+      url: url,
+    });
+    functions.logger.info('metadata', {
+      url,
+      metadata,
+    });
+    return metadata;
+  } catch (e) {
+    functions.logger.error(`fetch url metadata failed: ${e.message}`, {
+      url,
+    });
+    return {
+      url,
+      date: null,
+      title: null,
+      description: null,
+      logo: null,
+      lang: null,
+      video: null,
+      author: null
+    };
+  }
+});
+
+export const fetchUrlMetadataUsingPuppeteer = functions.region('asia-northeast1').runWith({
   memory: '1GB'
 }).https.onCall(async (data, context: CallableContext) => {
   if (!context.auth) {
@@ -45,10 +113,19 @@ export const fetchUrlMetadata = functions.region('asia-northeast1').runWith({
     body = await page.evaluate(() => document.documentElement.outerHTML);
     browser.close();
   } catch (e) {
-    functions.logger.error(e.message, {
+    functions.logger.error(`fetch url data failed: ${e.message}`, {
       url,
     });
-    return null;
+    return {
+      url,
+      date: null,
+      title: null,
+      description: null,
+      logo: null,
+      lang: null,
+      video: null,
+      author: null
+    };
   }
 
   try {
@@ -62,10 +139,19 @@ export const fetchUrlMetadata = functions.region('asia-northeast1').runWith({
     });
     return metadata;
   } catch (e) {
-    functions.logger.error(e.message, {
+    functions.logger.error(`fetch url metadata failed: ${e.message}`, {
       url,
     });
-    return null;
+    return {
+      url,
+      date: null,
+      title: null,
+      description: null,
+      logo: null,
+      lang: null,
+      video: null,
+      author: null
+    };
   }
 });
 
