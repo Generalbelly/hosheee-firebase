@@ -2,7 +2,7 @@ import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import * as chardet from 'chardet';
 import * as iconv from 'iconv-lite';
-import axios from 'axios';
+import axios, {AxiosError} from 'axios';
 const puppeteer = require('puppeteer');
 import {CallableContext} from "firebase-functions/lib/providers/https";
 import {LogEntry} from "firebase-functions/lib/logger";
@@ -49,8 +49,10 @@ export const fetchUrlMetadata = functions.region('asia-northeast1').https.onCall
     const response = await client.get(url);
     body = response.data;
   } catch (e) {
+    const err = e as AxiosError;
     functions.logger.error(`fetch url data failed: ${e.message}`, {
       url,
+      response: err.response,
     });
     return {
       url,
