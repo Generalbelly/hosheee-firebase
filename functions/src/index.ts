@@ -2,10 +2,10 @@ import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import * as chardet from 'chardet';
 import * as iconv from 'iconv-lite';
-import axios, {AxiosError} from 'axios';
+import axios, { AxiosError } from 'axios';
 const puppeteer = require('puppeteer');
-import {CallableContext} from "firebase-functions/lib/providers/https";
-import {LogEntry} from "firebase-functions/lib/logger";
+import { CallableContext } from "firebase-functions/lib/providers/https";
+import { LogEntry } from "firebase-functions/lib/logger";
 
 const metascraper = require('metascraper')([
   require('metascraper-amazon')(),
@@ -51,48 +51,40 @@ export const fetchUrlMetadata = functions.region('asia-northeast1').https.onCall
   } catch (e) {
     const err = e as AxiosError;
     const errResponse = err.response;
-    functions.logger.error(`fetch url data failed: ${e.message}`, {
+    functions.logger.error(`fetching url data failed: ${e.message}`, {
       url,
-      status: errResponse ? errResponse.status : null,
       responseData: errResponse ? errResponse.data : null,
     });
-    return {
-      url,
-      date: null,
-      title: null,
-      description: null,
-      logo: null,
-      lang: null,
-      video: null,
-      author: null
-    };
   }
 
-  try {
-    const metadata = await metascraper({
-      html: body,
-      url: url,
-    });
-    functions.logger.info('metadata', {
-      url,
-      metadata,
-    });
-    return metadata;
-  } catch (e) {
-    functions.logger.error(`fetch url metadata failed: ${e.message}`, {
-      url,
-    });
-    return {
-      url,
-      date: null,
-      title: null,
-      description: null,
-      logo: null,
-      lang: null,
-      video: null,
-      author: null
-    };
+  if (body) {
+    try {
+      const metadata = await metascraper({
+        html: body,
+        url: url,
+      });
+      functions.logger.info('metadata', {
+        url,
+        metadata,
+      });
+      return metadata;
+    } catch (e) {
+      functions.logger.error(`fetching url metadata failed: ${e.message}`, {
+        url,
+      });
+    }
   }
+
+  return {
+    url,
+    date: null,
+    title: null,
+    description: null,
+    logo: null,
+    lang: null,
+    video: null,
+    author: null
+  };
 });
 
 export const fetchUrlMetadataUsingPuppeteer = functions.region('asia-northeast1').runWith({
@@ -117,46 +109,39 @@ export const fetchUrlMetadataUsingPuppeteer = functions.region('asia-northeast1'
     body = await page.evaluate(() => document.documentElement.outerHTML);
     browser.close();
   } catch (e) {
-    functions.logger.error(`fetch url data failed: ${e.message}`, {
+    functions.logger.error(`fetching url data failed: ${e.message}`, {
       url,
     });
-    return {
-      url,
-      date: null,
-      title: null,
-      description: null,
-      logo: null,
-      lang: null,
-      video: null,
-      author: null
-    };
   }
 
-  try {
-    const metadata = await metascraper({
-      html: body,
-      url: url,
-    });
-    functions.logger.info('metadata', {
-      url,
-      metadata,
-    });
-    return metadata;
-  } catch (e) {
-    functions.logger.error(`fetch url metadata failed: ${e.message}`, {
-      url,
-    });
-    return {
-      url,
-      date: null,
-      title: null,
-      description: null,
-      logo: null,
-      lang: null,
-      video: null,
-      author: null
-    };
+  if (body) {
+    try {
+      const metadata = await metascraper({
+        html: body,
+        url: url,
+      });
+      functions.logger.info('metadata', {
+        url,
+        metadata,
+      });
+      return metadata;
+    } catch (e) {
+      functions.logger.error(`fetching url metadata failed: ${e.message}`, {
+        url,
+      });
+    }
   }
+
+  return {
+    url,
+    date: null,
+    title: null,
+    description: null,
+    logo: null,
+    lang: null,
+    video: null,
+    author: null
+  };
 });
 
 export const writeLog = functions.region('asia-northeast1').https.onCall(async (data: LogEntry, context: CallableContext) => {
