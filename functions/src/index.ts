@@ -26,7 +26,9 @@ const metascraper = require('metascraper')([
 
 admin.initializeApp();
 
-export const fetchUrlMetadata = functions.region('asia-northeast1').https.onCall(async (data, context: CallableContext) => {
+export const fetchUrlMetadata = functions.region('asia-northeast1').runWith({
+  memory: '256MB'
+}).https.onCall(async (data, context: CallableContext) => {
   if (!context.auth) {
     throw new functions.https.HttpsError('failed-precondition', 'The function must be called while authenticated.');
   }
