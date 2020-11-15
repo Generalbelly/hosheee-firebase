@@ -1,8 +1,8 @@
 {
   "name": "hosheee",
   "scripts": {
-    "deploy-index:dev": "firebase use hosheee-dev && firebase deploy --only firestore:rules,firestore:indexes,storage",
-    "deploy-index:prod": "firebase use hosheee && firebase deploy --only firestore:rules,firestore:indexes,storage",
+    "deploy:dev": "firebase use hosheee-dev && firebase deploy --only firestore:rules,firestore:indexes,storage",
+    "deploy:prod": "firebase use hosheee && firebase deploy --only firestore:rules,firestore:indexes,storage",
     "deploy-hosting:dev": "firebase use hosheee-dev && firebase deploy --only hosting",
     "deploy-hosting:prod": "firebase use hosheee && firebase deploy --only hosting"
   },
